@@ -292,8 +292,6 @@ public sealed class DocumentDto
     public long SizeBytes { get; init; }
 
     [JsonIgnore]
-
-    [System.Text.Json.Serialization.JsonIgnore]
     public string StorageKey { get; init; } = string.Empty;
 
     public string? DocumentNumber { get; init; }
