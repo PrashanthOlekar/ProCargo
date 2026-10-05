@@ -1,0 +1,564 @@
+/*
+  Public home page: the NH 48 run. The page is one trip, Bengaluru to Hubballi.
+  - The headline widens once as the page opens (Archivo's width axis), like a lorry pulling away.
+  - The ProCargo lorry drives in along a night road.
+  - In "How it works" the lorry drives down the road as you scroll; each roadside stone it passes lights up a step,
+    and the direction sign counts the kilometres left.
+  Colours follow the theme: lorry teal, asphalt, milestone white. Plate yellow stays on number plates only.
+*/
+
+.hp {
+  --teal: #0f5f5b;
+  --teal-dark: #0a4441;
+  --teal-tint: #e3efee;
+  --asphalt: #1e2328;
+  --asphalt-2: #2a3138;
+  --slate: #5a636b;
+  --milestone: #f6f7f5;
+  --line: #dce0dd;
+  --on-dark: #c9ced2;
+  --plate: #f5c518;
+}
+
+.hp-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-inline: clamp(16px, 4vw, 32px);
+}
+
+/* ---------- hero ---------- */
+.hp-hero {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(60% 70% at 90% 100%, rgba(15, 95, 91, 0.55), rgba(15, 95, 91, 0) 70%),
+    linear-gradient(180deg, #14181c 0%, var(--asphalt) 60%, #232a30 100%);
+}
+.hp-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 460px);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: center;
+  padding-block: clamp(40px, 7vw, 88px) 96px;
+}
+.hp-title {
+  margin: 0;
+  font-size: clamp(2.8rem, 6.4vw, 5.6rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+.hp-title span {
+  display: block;
+  font-stretch: 78%;
+  animation: hp-pull-away 1.1s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+}
+.hp-title span:nth-child(2) {
+  animation-delay: 0.12s;
+}
+.hp-title span:nth-child(3) {
+  animation-delay: 0.24s;
+  color: #8fd3cd;
+}
+@keyframes hp-pull-away {
+  from {
+    font-stretch: 62%;
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    font-stretch: 78%;
+    opacity: 1;
+    transform: none;
+  }
+}
+.hp-lede {
+  margin: 22px 0 0;
+  max-width: 44ch;
+  font-size: 1.15rem;
+  color: var(--on-dark);
+}
+.hp-promises {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  color: var(--on-dark);
+  font-size: 0.95rem;
+}
+.hp-promises li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hp-promises li::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8fd3cd;
+}
+
+/* The estimate card wears a teal highway direction sign */
+.hp-sign {
+  margin: 8px;
+  padding: 16px 20px;
+  border: 4px solid #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 0 2px var(--teal);
+  background: var(--teal);
+  color: #fff;
+}
+.hp-sign-label {
+  margin: 0;
+  font-weight: 600;
+  color: #cfe7e4;
+}
+.hp-sign-route {
+  margin: 2px 0 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  font-stretch: 80%;
+  line-height: 1.15;
+}
+
+/* ---------- roads, stones and lorries ---------- */
+.hp-road {
+  position: relative;
+  height: 110px;
+  background: linear-gradient(180deg, #30383f 0%, #23292e 100%);
+  border-top: 6px solid #3d464e;
+}
+.hp-road::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50px;
+  height: 5px;
+  background: repeating-linear-gradient(90deg, #f1f3f2 0 70px, transparent 70px 140px);
+  opacity: 0.85;
+}
+.hp-hero .hp-road {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+/* A roadside stone: white, teal cap, the town and the kilometres left */
+.hp-stone {
+  flex: none;
+  width: 72px;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 2px;
+  padding: 26px 4px 10px;
+  border-radius: 36px 36px 6px 6px;
+  background: linear-gradient(180deg, var(--teal) 0 22px, #fff 22px);
+  box-shadow: inset 0 -6px 0 rgba(30, 35, 40, 0.08), 0 6px 14px rgba(0, 0, 0, 0.25);
+  color: var(--asphalt);
+  text-align: center;
+}
+.hp-stone span {
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.hp-stone b {
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-stretch: 70%;
+  line-height: 1;
+}
+.hp-road .hp-stone {
+  position: absolute;
+  right: clamp(16px, 9vw, 140px);
+  bottom: 62px;
+}
+.hp-lorry {
+  position: absolute;
+  left: clamp(16px, 7vw, 110px);
+  bottom: 38px;
+  width: clamp(190px, 21vw, 280px);
+  animation: hp-drive-in 2.4s cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s both;
+}
+.hp-lorry .hp-wheel {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hp-roll 0.5s linear 0.3s 5;
+}
+@keyframes hp-drive-in {
+  from {
+    transform: translateX(-140%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes hp-roll {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- section headings ---------- */
+.hp-section {
+  padding-block: clamp(64px, 9vw, 110px);
+}
+.hp-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 20px 48px;
+  align-items: end;
+  margin-bottom: 40px;
+}
+.hp-head h2 {
+  margin: 0;
+  font-size: clamp(2.2rem, 4.8vw, 3.6rem);
+  font-weight: 800;
+  font-stretch: 75%;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.hp-head p {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 1.08rem;
+  color: var(--slate);
+}
+
+/* ---------- fleet line-up ---------- */
+.hp-meter {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background: var(--teal-tint);
+}
+.hp-meter label {
+  font-weight: 800;
+}
+.hp-meter input {
+  width: 100%;
+  height: 32px;
+  accent-color: var(--teal);
+}
+.hp-meter output {
+  min-width: 7ch;
+  text-align: right;
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-stretch: 75%;
+}
+.hp-fleet {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 2px solid var(--asphalt);
+}
+.hp-fleet li {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1.2fr) 100px auto;
+  gap: 20px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  transition: opacity 0.25s;
+}
+.hp-fleet li.is-small {
+  opacity: 0.35;
+}
+.hp-scale {
+  position: relative;
+  height: 34px;
+}
+.hp-scale i {
+  position: absolute;
+  left: 0;
+  bottom: 6px;
+  height: 22px;
+  border-radius: 3px;
+  background: var(--asphalt);
+  transition: background 0.25s;
+}
+.hp-scale i::after {
+  content: '';
+  position: absolute;
+  right: -16px;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 0 6px 2px 0;
+  background: inherit;
+}
+.hp-scale i::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: -10px;
+  bottom: -6px;
+  height: 8px;
+  background: radial-gradient(circle at 5px 4px, var(--asphalt) 4px, transparent 4.5px) left / 22px 8px repeat-x;
+}
+.hp-fleet li.is-best .hp-scale i {
+  background: var(--teal);
+}
+.hp-fleet-name b {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-stretch: 85%;
+}
+.hp-fleet-name span {
+  font-size: 0.9rem;
+  color: var(--slate);
+}
+.hp-best {
+  display: none;
+  margin-left: 8px;
+  padding: 1px 9px;
+  border-radius: 4px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-stretch: 100%;
+  vertical-align: middle;
+}
+.hp-fleet li.is-best .hp-best {
+  display: inline-block;
+}
+.hp-cap {
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-stretch: 80%;
+}
+
+/* ---------- the journey ---------- */
+.hp-journey {
+  background: var(--asphalt);
+  color: #fff;
+}
+.hp-journey .hp-head p {
+  color: var(--on-dark);
+}
+.hp-journey-grid {
+  display: grid;
+  grid-template-columns: 220px 84px minmax(0, 1fr);
+  gap: 0 40px;
+}
+.hp-board {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  display: grid;
+  gap: 12px;
+}
+.hp-board-sign {
+  display: grid;
+  gap: 2px;
+  padding: 16px 18px;
+  border: 4px solid #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px var(--teal), 0 18px 40px rgba(0, 0, 0, 0.35);
+  background: var(--teal);
+}
+.hp-board-sign span {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.hp-board-sign b {
+  font-size: 2.6rem;
+  font-weight: 800;
+  font-stretch: 70%;
+  line-height: 1;
+}
+.hp-board p {
+  margin: 0;
+  min-height: 3em;
+  color: var(--on-dark);
+  font-weight: 600;
+}
+.hp-lane {
+  position: relative;
+  background: #2a3138;
+  border-inline: 4px solid #3d464e;
+  border-radius: 6px;
+}
+.hp-lane::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  margin-left: -2px;
+  background: repeating-linear-gradient(180deg, #f1f3f2 0 40px, transparent 40px 80px);
+  opacity: 0.8;
+}
+.hp-lane-lorry {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 46px;
+  margin-left: -23px;
+  will-change: transform;
+}
+.hp-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.hp-steps li {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+  min-height: 200px;
+  padding-bottom: 28px;
+  opacity: 0.4;
+  transition: opacity 0.35s;
+}
+.hp-steps li.is-reached {
+  opacity: 1;
+}
+.hp-steps h3 {
+  margin: 16px 0 8px;
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 800;
+  font-stretch: 80%;
+  line-height: 1.1;
+}
+.hp-steps p {
+  margin: 0;
+  max-width: 50ch;
+  font-size: 1.04rem;
+  color: var(--on-dark);
+}
+
+/* ---------- owners and paperwork ---------- */
+.hp-owners {
+  background: var(--teal);
+  color: #fff;
+}
+.hp-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+}
+.hp-split h2 {
+  margin: 0 0 18px;
+  font-size: clamp(2.2rem, 4.8vw, 3.6rem);
+  font-weight: 800;
+  font-stretch: 75%;
+  line-height: 1;
+}
+.hp-owners .hp-split > div > p {
+  margin: 0 0 28px;
+  max-width: 44ch;
+  font-size: 1.1rem;
+  color: #d6e7e5;
+}
+.hp-facts {
+  margin: 0;
+  border-top: 2px solid rgba(255, 255, 255, 0.5);
+}
+.hp-facts div {
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+}
+.hp-facts dt {
+  margin-bottom: 4px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-stretch: 80%;
+}
+.hp-facts dd {
+  margin: 0;
+  color: #e3efee;
+}
+.hp-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.hp-checks li {
+  position: relative;
+  padding: 16px 0 16px 44px;
+  border-bottom: 1px solid var(--line);
+  color: var(--slate);
+}
+.hp-checks li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 18px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--teal)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12l4 4 8-8'/%3E%3C/svg%3E")
+    center / 16px no-repeat;
+}
+.hp-checks b {
+  display: block;
+  color: var(--asphalt);
+  font-size: 1.05rem;
+}
+
+/* ---------- small screens ---------- */
+@media (max-width: 960px) {
+  .hp-hero-grid,
+  .hp-head,
+  .hp-split {
+    grid-template-columns: 1fr;
+  }
+  .hp-journey-grid {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 0 18px;
+  }
+  .hp-board {
+    display: none;
+  }
+  .hp-lane-lorry {
+    width: 32px;
+    margin-left: -16px;
+  }
+  .hp-steps li {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    min-height: 0;
+    padding-bottom: 44px;
+  }
+  .hp-fleet li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 16px;
+  }
+  .hp-scale {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 560px) {
+  .hp-meter {
+    grid-template-columns: 1fr auto;
+  }
+  .hp-meter input {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-title span,
+  .hp-lorry,
+  .hp-lorry .hp-wheel {
+    animation: none;
+  }
+}
