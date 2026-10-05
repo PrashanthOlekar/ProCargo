@@ -1,0 +1,56 @@
+name: ProCargo.Database
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Database/**"
+      - ".github/workflows/database.yml"
+  pull_request:
+    paths:
+      - "Database/**"
+      - ".github/workflows/database.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Deploy scripts to SQL Server 2022 and run workflow smoke tests
+    runs-on: ubuntu-latest
+    env:
+      SA_PASSWORD: ${{ secrets.CI_SQL_SA_PASSWORD || 'CiOnly!Passw0rd#2026' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start SQL Server
+        run: |
+          docker run -d --name mssql \
+            -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD="$SA_PASSWORD" -e MSSQL_PID=Developer \
+            -p 1433:1433 -v "$GITHUB_WORKSPACE/Database:/db:ro" \
+            mcr.microsoft.com/mssql/server:2022-latest
+          for i in $(seq 1 60); do
+            if docker exec mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -Q "SELECT 1" > /dev/null 2>&1; then
+              echo "SQL Server is ready"; exit 0
+            fi
+            sleep 2
+          done
+          docker logs mssql; exit 1
+
+      - name: Deploy (first run, with test data)
+        run: |
+          docker exec -e SQLCMD=/opt/mssql-tools18/bin/sqlcmd -e SQL_SERVER=localhost -e SQL_USER=sa -e SQL_PASSWORD="$SA_PASSWORD" \
+            mssql bash /db/ProCargo.Database/deploy.sh --with-test-data
+
+      - name: Deploy again (scripts must be idempotent)
+        run: |
+          docker exec -e SQLCMD=/opt/mssql-tools18/bin/sqlcmd -e SQL_SERVER=localhost -e SQL_USER=sa -e SQL_PASSWORD="$SA_PASSWORD" \
+            mssql bash /db/ProCargo.Database/deploy.sh --with-test-data
+
+      - name: Workflow smoke tests (booking -> quotation -> trip -> POD -> invoice -> payment -> settlement)
+        run: |
+          for f in /db/ProCargo.Database/tests/*.sql; do
+            echo ">> $f"
+            docker exec mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -d ProCargo -b -I -i "$f"
+          done
