@@ -15,7 +15,15 @@ online or offline; the truck owner is settled the freight less commission.
 
 The three solutions are independent: each builds, tests and deploys on its own pipeline in `.github/workflows`.
 
-## Quick start (local)
+## Run it on Windows with SQL Server (SSMS)
+
+1. In SSMS, open and execute (F5) `Database/ProCargo.Database/SSMS/ProCargo_Install.sql`, then
+   `ProCargo_TestData.sql`.
+2. In PowerShell, from this folder: `.\start-procargo.ps1` (add `-Server "localhost\SQLEXPRESS"` for SQL Express, or
+   `-SqlUser sa -SqlPassword "…"` for a SQL login). It stores the settings, installs packages on the first run and
+   opens the API and both portals.
+
+## Quick start with Docker (any OS)
 
 Needs .NET SDK 10, Node.js 22, Docker.
 
