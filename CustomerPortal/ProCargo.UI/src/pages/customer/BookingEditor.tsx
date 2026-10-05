@@ -155,7 +155,7 @@ function BookingEditor({ existing }: { existing?: BookingDetailsResponse }) {
   const vehicle = vehicleTypes.find((t) => t.vehicleTypeId === Number(watch('vehicleTypeId')));
   const overweight = vehicle && totalWeight > vehicle.capacityKg;
 
-  const useSaved = (target: 'pickupAddress' | 'deliveryAddress', a: CustomerAddress) =>
+  const applySavedAddress = (target: 'pickupAddress' | 'deliveryAddress', a: CustomerAddress) =>
     setValue(target, {
       addressLine1: a.addressLine1,
       addressLine2: a.addressLine2 ?? '',
@@ -206,7 +206,7 @@ function BookingEditor({ existing }: { existing?: BookingDetailsResponse }) {
         (addresses.data?.length ?? 0) > 0 ? (
           <TextField select size="small" label="Use a saved address" value="" sx={{ minWidth: 220 }} onChange={(e) => {
             const a = addresses.data?.find((x) => x.customerAddressId === Number(e.target.value));
-            if (a) useSaved(prefix, a);
+            if (a) applySavedAddress(prefix, a);
           }}>
             {addresses.data?.map((a) => (
               <MenuItem key={a.customerAddressId} value={a.customerAddressId}>
