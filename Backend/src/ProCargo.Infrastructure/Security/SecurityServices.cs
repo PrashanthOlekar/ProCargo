@@ -29,17 +29,7 @@ internal sealed class JwtTokenService : ITokenService
     {
         _options = options.Value;
         _clock = clock;
-        _credentials = new SigningCredentials(CreateSigningKey(_options.SigningKey), SecurityAlgorithms.HmacSha256);
-    }
-
-    public static SymmetricSecurityKey CreateSigningKey(string signingKey)
-    {
-        if (string.IsNullOrWhiteSpace(signingKey) || Encoding.UTF8.GetByteCount(signingKey) < 32)
-        {
-            throw new InvalidOperationException("Jwt:SigningKey must be configured with at least 32 bytes (use user-secrets or Key Vault).");
-        }
-
-        return new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)) { KeyId = "procargo-hs256" };
+        _credentials = new SigningCredentials(JwtSigningKey.Create(_options.SigningKey), SecurityAlgorithms.HmacSha256);
     }
 
     public AccessToken CreateAccessToken(TokenSubject subject)
@@ -85,6 +75,20 @@ internal sealed class JwtTokenService : ITokenService
         portal == PortalType.Operations
             ? TimeSpan.FromHours(_options.OperationsRefreshTokenHours)
             : TimeSpan.FromDays(_options.WebRefreshTokenDays);
+}
+
+/// <summary>Builds the symmetric signing key shared by token issuing and validation.</summary>
+public static class JwtSigningKey
+{
+    public static SymmetricSecurityKey Create(string signingKey)
+    {
+        if (string.IsNullOrWhiteSpace(signingKey) || Encoding.UTF8.GetByteCount(signingKey) < 32)
+        {
+            throw new InvalidOperationException("Jwt:SigningKey must be configured with at least 32 bytes (use user-secrets or Key Vault).");
+        }
+
+        return new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)) { KeyId = "procargo-hs256" };
+    }
 }
 
 /// <summary>ASP.NET Core Identity's PBKDF2 (HMAC-SHA512, 100k iterations, V3 format) password hasher.</summary>

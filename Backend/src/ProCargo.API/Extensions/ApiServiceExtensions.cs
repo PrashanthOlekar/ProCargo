@@ -107,7 +107,7 @@ public static class ApiServiceExtensions
                     ValidateAudience = true,
                     ValidAudiences = [jwt.WebAudience, jwt.OperationsAudience],
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = JwtTokenService.CreateSigningKey(jwt.SigningKey),
+                    IssuerSigningKey = JwtSigningKey.Create(jwt.SigningKey),
                     ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromSeconds(30),
