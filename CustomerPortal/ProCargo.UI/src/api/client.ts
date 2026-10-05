@@ -20,7 +20,9 @@ export function setAccessToken(token: string | null) {
 
 export function onSessionChange(listener: (auth: AuthResponse | null) => void) {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 export const api = axios.create({

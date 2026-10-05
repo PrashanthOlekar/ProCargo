@@ -129,7 +129,7 @@ export const supportApi = {
 };
 
 export const notificationApi = {
-  list: (q: T.PageQuery & { unreadOnly?: boolean }) => get<T.PagedResult<T.NotificationItem>>('/notifications', q),
+  list: (q: T.PageQuery & Query) => get<T.PagedResult<T.NotificationItem>>('/notifications', q),
   unreadCount: () => get<{ count: number }>('/notifications/unread-count'),
   markRead: (id: number) => post(`/notifications/${id}/read`),
   markAllRead: () => post('/notifications/read-all'),
