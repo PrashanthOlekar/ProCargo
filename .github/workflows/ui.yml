@@ -1,0 +1,63 @@
+name: ProCargo.UI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "CustomerPortal/**"
+      - ".github/workflows/ui.yml"
+  pull_request:
+    paths:
+      - "CustomerPortal/**"
+      - ".github/workflows/ui.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Lint, type-check, test and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: CustomerPortal/ProCargo.UI
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: ../../.github/scripts/run-and-annotate.sh "npm install" npm install --no-audit --no-fund
+      - name: Type-check
+        run: ../../.github/scripts/run-and-annotate.sh "Type errors" npm run typecheck
+      - name: Lint
+        run: ../../.github/scripts/run-and-annotate.sh "Lint" npm run lint
+      - name: Unit tests
+        run: ../../.github/scripts/run-and-annotate.sh "Unit tests" npm test
+      - name: Build
+        run: ../../.github/scripts/run-and-annotate.sh "Build" npx vite build
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: procargo-ui
+          path: CustomerPortal/ProCargo.UI/dist
+          retention-days: 14
+
+  deploy:
+    name: Deploy to Azure Static Web Apps
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_UI == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: procargo-ui
+          path: dist
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_UI }}
+          action: upload
+          app_location: dist
+          skip_app_build: true
