@@ -71,6 +71,7 @@ export const tripApi = {
   get: (id: number) => get<T.TripDetailsResponse>(`/trips/${id}`),
   create: (body: unknown) => post<T.CreatedResponse>('/trips', body),
   history: (id: number) => get<T.StatusHistory[]>(`/trips/${id}/history`),
+  tracking: (id: number, sinceUtc?: string) => get<T.TripTracking>(`/trips/${id}/tracking`, { sinceUtc }),
   assignments: (id: number) => get<T.TripAssignment[]>(`/trips/${id}/assignments`),
   reassignVehicle: (id: number, vehicleId: number, reason: string) => post(`/trips/${id}/reassign-vehicle`, { vehicleId, reason }),
   reassignDriver: (id: number, driverId: number, reason: string) => post(`/trips/${id}/reassign-driver`, { driverId, reason }),
