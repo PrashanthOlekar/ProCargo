@@ -19,9 +19,11 @@ Then, once per environment:
 4. GitHub: set repository variables `AZURE_API_APP_NAME`, `DEPLOY_UI=true`, `DEPLOY_OPERATIONS=true`, secrets
    `AZURE_CLIENT_ID`/`AZURE_TENANT_ID`/`AZURE_SUBSCRIPTION_ID` (OIDC federated credential with Website Contributor on
    the web app), and the Static Web App deployment tokens `AZURE_STATIC_WEB_APPS_API_TOKEN_UI` and
-   `AZURE_STATIC_WEB_APPS_API_TOKEN_OPS` (`az staticwebapp secrets list -n <name>`). Set `VITE_API_BASE_URL` for
-   the portals to the API URL + `/api/v1` when they are not served behind the same domain.
-5. Point the Razorpay webhook at `https://<api>/api/v1/payments/webhooks/razorpay`.
+   `AZURE_STATIC_WEB_APPS_API_TOKEN_OPS` (`az staticwebapp secrets list -n <name>`).
+5. Domains: the refresh cookie is `SameSite=Strict`, so bind custom domains under one registrable domain
+   (`www.`, `operations.`, `api.procargo.com`), pass them as `webPortalUrl` / `operationsPortalUrl`, and set the repository
+   variable `API_BASE_URL=https://api.procargo.com/api/v1` (the portal builds use it). See Docs/Deployment.
+6. Point the Razorpay webhook at `https://<api>/api/v1/payments/webhooks/razorpay`.
 
 | Resource | Purpose |
 | --- | --- |

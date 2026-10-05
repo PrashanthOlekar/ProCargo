@@ -187,12 +187,12 @@ export function UserDetailPage() {
                 <Section
                   title="Roles"
                   action={
-                    <Button variant="contained" disabled={!changed || selected.length === 0} onClick={() => run(() => adminApi.setUserRoles(id, selected), 'Roles saved. They apply from the next sign-in or token refresh.')}>
+                    <Button variant="contained" disabled={self || !changed || selected.length === 0} onClick={() => run(() => adminApi.setUserRoles(id, selected), 'Roles saved. They apply from the next sign-in or token refresh.')}>
                       Save roles
                     </Button>
                   }
                 >
-                  {self && <Alert severity="info" sx={{ mb: 2 }}>You cannot remove your own administrator role.</Alert>}
+                  {self && <Alert severity="info" sx={{ mb: 2 }}>You cannot change your own roles. Ask another administrator.</Alert>}
                   <FormGroup>
                     {assignable.map((r) => (
                       <FormControlLabel
@@ -200,7 +200,7 @@ export function UserDetailPage() {
                         control={
                           <Checkbox
                             checked={selected.includes(r.roleId)}
-                            disabled={!r.isActive}
+                            disabled={self || !r.isActive}
                             onChange={(e) => setSelected(e.target.checked ? [...selected, r.roleId] : selected.filter((x) => x !== r.roleId))}
                           />
                         }

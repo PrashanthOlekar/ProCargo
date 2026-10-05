@@ -1,0 +1,30 @@
+# Local development dependencies: SQL Server 2022 and an SMTP catcher.
+#   export MSSQL_SA_PASSWORD='Choose-A-Strong-One-1'
+#   docker compose up -d
+# The API (dotnet run) and both portals (npm run dev) run on the host.
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - procargo-sql:/var/opt/mssql
+      - ./Database:/db:ro
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 12
+
+  # Catches every e-mail the API sends (invites, resets, notifications). Web UI: http://localhost:5025
+  smtp:
+    image: rnwood/smtp4dev:v3
+    ports:
+      - "1025:25"
+      - "5025:80"
+
+volumes:
+  procargo-sql:
