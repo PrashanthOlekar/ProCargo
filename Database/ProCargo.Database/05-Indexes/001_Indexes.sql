@@ -198,7 +198,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_PaymentRefund_Payment
     CREATE INDEX IX_PaymentRefund_PaymentId ON fin.PaymentRefund (PaymentId);
 -- One live settlement per trip (Failed = 5 and Cancelled = 6 may be retried).
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Settlement_Trip_Active' AND object_id = OBJECT_ID(N'fin.Settlement'))
-    CREATE UNIQUE INDEX UX_Settlement_Trip_Active ON fin.Settlement (TripId) WHERE SettlementStatusId NOT IN (5, 6);
+    CREATE UNIQUE INDEX UX_Settlement_Trip_Active ON fin.Settlement (TripId) WHERE SettlementStatusId IN (1, 2, 3, 4);
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Settlement_Owner_Created' AND object_id = OBJECT_ID(N'fin.Settlement'))
     CREATE INDEX IX_Settlement_Owner_Created ON fin.Settlement (OwnerId, CreatedDateUtc DESC) INCLUDE (SettlementStatusId, NetAmount);
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Settlement_Status_Created' AND object_id = OBJECT_ID(N'fin.Settlement'))
