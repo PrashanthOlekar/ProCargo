@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IMasterDataService, MasterDataService>();
 
+        services.AddScoped<VerificationRules>();
         services.AddScoped<IFileService, FileService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IOwnerService, OwnerService>();

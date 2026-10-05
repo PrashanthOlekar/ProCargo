@@ -6,7 +6,7 @@ using Serilog;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
-    .CreateBootstrapLogger();
+    .CreateLogger();
 
 try
 {
@@ -18,7 +18,14 @@ try
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext()
-        .Enrich.WithProperty("Application", "ProCargo.API"));
+        .Enrich.WithProperty("Application", "ProCargo.API"), preserveStaticLogger: true);
+
+    // Fail fast at startup if any service cannot be constructed or a scoped service leaks into a singleton.
+    builder.Host.UseDefaultServiceProvider(options =>
+    {
+        options.ValidateScopes = true;
+        options.ValidateOnBuild = true;
+    });
 
     builder.WebHost.ConfigureKestrel(options =>
     {
