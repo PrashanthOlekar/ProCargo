@@ -6,6 +6,7 @@ on:
     paths:
       - "Database/**"
       - ".github/workflows/database.yml"
+      - ".github/scripts/**"
   pull_request:
     paths:
       - "Database/**"
