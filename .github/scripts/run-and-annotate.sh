@@ -14,7 +14,7 @@ status=${PIPESTATUS[0]}
 
 if [[ $status -ne 0 ]]; then
   # Prefer lines that look like errors; fall back to the raw tail.
-  summary="$(grep -E -i "error|failed|msg [0-9]+|level 1[1-9]|exception|assert" "$log_file" | tail -n 60)"
+  summary="$(grep -E -i "^>>|error|failed|msg [0-9]+|level 1[1-9]|exception|assert|incorrect|invalid|must|cannot" "$log_file" | tail -n 60)"
   [[ -z "$summary" ]] && summary="$(tail -n 60 "$log_file")"
   summary="${summary:0:12000}"
   summary="${summary//'%'/'%25'}"
