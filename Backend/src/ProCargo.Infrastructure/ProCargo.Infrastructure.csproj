@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    ProCargo.Infrastructure: EF Core DbContext + stored procedure execution, repository implementations,
+    JWT/refresh-token/password services, file storage, e-mail, SMS, payment gateway, notifications,
+    audit logging and background jobs. Implements interfaces declared in ProCargo.Application.
+  -->
+  <PropertyGroup>
+    <RootNamespace>ProCargo.Infrastructure</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProCargo.Application\ProCargo.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Data Protection, PasswordHasher, IHttpClientFactory, hosting abstractions -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Azure.Storage.Blobs" />
+    <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ProCargo.UnitTests" />
+    <InternalsVisibleTo Include="ProCargo.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

@@ -223,6 +223,8 @@ BEGIN
         s.AdjustmentAmount,
         s.NetAmount,
         s.SettlementStatusId,
+        s.CreatedBy,
+        o.UserId AS OwnerUserId,
         s.ApprovedDateUtc,
         s.SettlementDateUtc,
         s.TransactionReference,

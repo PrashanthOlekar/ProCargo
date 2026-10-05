@@ -175,6 +175,7 @@ BEGIN
         b.BookingNumber,
         b.CustomerId,
         c.FullName AS CustomerName,
+        c.UserId AS CustomerUserId,
         b.BookingStatusId,
         q.VersionNo,
         q.DistanceKm,

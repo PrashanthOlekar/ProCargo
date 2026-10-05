@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    ProCargo.Domain: enums, constants, value objects, status-transition rules and the pricing calculator.
+    No references to other projects and no framework dependencies: pure business concepts.
+  -->
+  <PropertyGroup>
+    <RootNamespace>ProCargo.Domain</RootNamespace>
+  </PropertyGroup>
+
+</Project>

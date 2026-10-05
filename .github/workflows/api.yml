@@ -1,0 +1,123 @@
+name: ProCargo.API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Backend/**"
+      - "Database/**"
+      - ".github/workflows/api.yml"
+      - ".github/scripts/**"
+  pull_request:
+    paths:
+      - "Backend/**"
+      - "Database/**"
+      - ".github/workflows/api.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    name: Build, unit tests, integration tests (SQL Server 2022)
+    runs-on: ubuntu-latest
+    env:
+      SA_PASSWORD: ${{ secrets.CI_SQL_SA_PASSWORD || 'CiOnly!Passw0rd#2026' }}
+    defaults:
+      run:
+        working-directory: Backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: Backend/global.json
+
+      - name: Restore
+        run: ../.github/scripts/run-and-annotate.sh "Restore" dotnet restore ProCargo.API.sln
+
+      - name: Build
+        run: |
+          set -o pipefail
+          dotnet build ProCargo.API.sln --no-restore -c Release 2>&1 | tee build.log || {
+            errors="$(grep -E ': error ' build.log | sed -E 's#^.*/Backend/##' | sort -u | head -n 80)"
+            errors="${errors//'%'/'%25'}"; errors="${errors//$'\n'/'%0A'}"
+            echo "::error title=Build errors::${errors}"
+            exit 1
+          }
+
+      - name: Unit tests
+        run: ../.github/scripts/run-and-annotate.sh "Unit tests" dotnet test tests/ProCargo.UnitTests --no-build -c Release --logger "console;verbosity=normal"
+
+      - name: Start SQL Server
+        working-directory: .
+        run: |
+          docker run -d --name mssql \
+            -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD="$SA_PASSWORD" -e MSSQL_PID=Developer \
+            -p 1433:1433 -v "$GITHUB_WORKSPACE/Database:/db:ro" \
+            mcr.microsoft.com/mssql/server:2022-latest
+          for i in $(seq 1 60); do
+            if docker exec mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -Q "SELECT 1" > /dev/null 2>&1; then
+              echo "SQL Server is ready"; exit 0
+            fi
+            sleep 2
+          done
+          docker logs mssql; exit 1
+
+      - name: Deploy database with test data
+        working-directory: .
+        run: |
+          .github/scripts/run-and-annotate.sh "Database deploy" docker exec -e SQLCMD=/opt/mssql-tools18/bin/sqlcmd -e SQL_SERVER=localhost -e SQL_USER=sa -e SQL_PASSWORD="$SA_PASSWORD" \
+            mssql bash /db/ProCargo.Database/deploy.sh --with-test-data
+
+      - name: Integration tests
+        env:
+          PROCARGO_TEST_CONNECTION: "Server=localhost,1433;Database=ProCargo;User Id=sa;Password=${{ secrets.CI_SQL_SA_PASSWORD || 'CiOnly!Passw0rd#2026' }};TrustServerCertificate=True;Encrypt=True"
+        run: ../.github/scripts/run-and-annotate.sh "Integration tests" dotnet test tests/ProCargo.IntegrationTests --no-build -c Release --logger "console;verbosity=normal"
+
+      - name: Publish API
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: dotnet publish src/ProCargo.API/ProCargo.API.csproj --no-build -c Release -o ../artifacts/api
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: procargo-api
+          path: artifacts/api
+          retention-days: 14
+
+  deploy:
+    name: Deploy to Azure App Service
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AZURE_API_APP_NAME != ''
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: procargo-api
+          path: api
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_API_APP_NAME }}
+          package: api
+      - name: Smoke check
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS "https://${{ vars.AZURE_API_APP_NAME }}.azurewebsites.net/health/ready" && exit 0
+            sleep 10
+          done
+          exit 1

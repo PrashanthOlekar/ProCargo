@@ -256,6 +256,7 @@ BEGIN
         b.BookingNumber,
         b.CustomerId,
         c.FullName              AS CustomerName,
+        c.UserId                AS CustomerUserId,
         c.CompanyName           AS CustomerCompanyName,
         c.PhoneNumber           AS CustomerPhoneNumber,
         b.VehicleTypeId,

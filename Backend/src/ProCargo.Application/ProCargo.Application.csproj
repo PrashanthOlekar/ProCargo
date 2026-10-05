@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    ProCargo.Application: use cases (services), repository + infrastructure abstractions,
+    DTOs, requests, validators and resource-level authorization rules.
+    Depends only on Domain. Infrastructure implements the interfaces defined here.
+  -->
+  <PropertyGroup>
+    <RootNamespace>ProCargo.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProCargo.Domain\ProCargo.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ProCargo.UnitTests" />
+  </ItemGroup>
+
+</Project>
