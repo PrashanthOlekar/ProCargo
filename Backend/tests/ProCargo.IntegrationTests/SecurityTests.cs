@@ -70,7 +70,7 @@ public sealed class SecurityTests : IClassFixture<ApiFactory>
     {
         Skip.If(ApiFactory.ConnectionString is null, "PROCARGO_TEST_CONNECTION not set");
         var ops = await Api.SignInAsync(_factory, "ops@procargo.test", "Operations");
-        var bookings = await ops.GetAsync("/api/v1/bookings?pageSize=1");
+        var bookings = await ops.GetJsonAsync("/api/v1/bookings?pageSize=1");
         var bookingId = bookings["items"]!.AsArray()[0]!["bookingId"]!.GetValue<long>();
 
         // The owner has no trip on this booking yet: 404, not 403, so ids cannot be probed.
@@ -139,10 +139,10 @@ public sealed class SecurityTests : IClassFixture<ApiFactory>
     {
         Skip.If(ApiFactory.ConnectionString is null, "PROCARGO_TEST_CONNECTION not set");
         var client = Api.Client(_factory);
-        var reference = await client.GetAsync("/api/v1/master-data/reference");
+        var reference = await client.GetJsonAsync("/api/v1/master-data/reference");
         var truck = reference["vehicleTypes"]!.AsArray().First(v => v!["code"]!.GetValue<string>() == "TRUCK_19FT")!;
 
-        var estimate = await client.PostAsync("/api/v1/pricing/estimate",
+        var estimate = await client.PostJsonAsync("/api/v1/pricing/estimate",
             new { vehicleTypeId = truck["vehicleTypeId"]!.GetValue<int>(), distanceKm = 145, weightKg = 4200, includeLoading = true });
         Assert.True(estimate!["totalAmount"]!.GetValue<decimal>() > 0);
         Assert.Equal(estimate["subTotal"]!.GetValue<decimal>(), estimate["lines"]!.AsArray().Sum(l => l!["amount"]!.GetValue<decimal>()));

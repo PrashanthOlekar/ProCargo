@@ -35,14 +35,14 @@ public sealed class BookingLifecycleTests : IClassFixture<ApiFactory>
         var admin = await Api.SignInAsync(_factory, "admin@procargo.test", "Operations");
 
         // ---- reference data
-        var reference = await customer.GetAsync("/api/v1/master-data/reference");
+        var reference = await customer.GetJsonAsync("/api/v1/master-data/reference");
         var truck = reference["vehicleTypes"]!.AsArray().First(v => v!["code"]!.GetValue<string>() == "TRUCK_19FT")!;
         var goods = reference["goodsTypes"]!.AsArray().First(g => g!["code"]!.GetValue<string>() == "FMCG")!;
-        var cities = await customer.GetArrayAsync("/api/v1/master-data/cities");
+        var cities = await customer.GetJsonArrayAsync("/api/v1/master-data/cities");
         int City(string name) => cities.First(c => c!["name"]!.GetValue<string>() == name)!["cityId"]!.GetValue<int>();
 
         // ---- 1. customer books
-        var booking = await customer.PostAsync("/api/v1/bookings", new
+        var booking = await customer.PostJsonAsync("/api/v1/bookings", new
         {
             vehicleTypeId = truck["vehicleTypeId"]!.GetValue<int>(),
             goodsTypeId = goods["goodsTypeId"]!.GetValue<int>(),
@@ -58,16 +58,16 @@ public sealed class BookingLifecycleTests : IClassFixture<ApiFactory>
         var bookingId = booking.Id();
 
         // ---- 2. operations quotes, customer accepts
-        var quotation = await ops.PostAsync("/api/v1/quotations",
+        var quotation = await ops.PostJsonAsync("/api/v1/quotations",
             new { bookingId, distanceKm = 150m, tollAmount = 450m, includeLoading = true, includeUnloading = true, sendImmediately = true });
-        await customer.PostAsync($"/api/v1/quotations/{quotation.Id()}/accept");
+        await customer.PostJsonAsync($"/api/v1/quotations/{quotation.Id()}/accept");
 
         // ---- 3. operations assigns the verified vehicle and driver
-        var vehicles = await ops.GetArrayAsync(
+        var vehicles = await ops.GetJsonArrayAsync(
             $"/api/v1/vehicles/available?vehicleTypeId={truck["vehicleTypeId"]}&minCapacityKg=2500&onDateUtc={DateTime.UtcNow.AddDays(2):O}");
         var vehicle = vehicles.First(v => v!["vehicleNumber"]!.GetValue<string>() == "KA25AB1234")!;
-        var drivers = await ops.GetArrayAsync($"/api/v1/drivers/available?ownerId={vehicle["ownerId"]}&onDateUtc={DateTime.UtcNow.AddDays(2):O}");
-        var trip = await ops.PostAsync("/api/v1/trips", new
+        var drivers = await ops.GetJsonArrayAsync($"/api/v1/drivers/available?ownerId={vehicle["ownerId"]}&onDateUtc={DateTime.UtcNow.AddDays(2):O}");
+        var trip = await ops.PostJsonAsync("/api/v1/trips", new
         {
             bookingId,
             vehicleId = vehicle["vehicleId"]!.GetValue<long>(),
@@ -78,17 +78,17 @@ public sealed class BookingLifecycleTests : IClassFixture<ApiFactory>
         var tripId = trip.Id();
 
         // ---- 4. driver: pickup OTP -> start -> delivery OTP -> POD
-        var pickupOtp = await driver.PostAsync($"/api/v1/trips/{tripId}/pickup/otp");
-        await driver.PostAsync($"/api/v1/trips/{tripId}/pickup/verify", new { otp = pickupOtp!["testOtp"]!.GetValue<string>(), odometer = 10000 });
-        await driver.PostAsync($"/api/v1/trips/{tripId}/start");
-        await driver.PostAsync($"/api/v1/trips/{tripId}/locations",
+        var pickupOtp = await driver.PostJsonAsync($"/api/v1/trips/{tripId}/pickup/otp");
+        await driver.PostJsonAsync($"/api/v1/trips/{tripId}/pickup/verify", new { otp = pickupOtp!["testOtp"]!.GetValue<string>(), odometer = 10000 });
+        await driver.PostJsonAsync($"/api/v1/trips/{tripId}/start");
+        await driver.PostJsonAsync($"/api/v1/trips/{tripId}/locations",
             new { points = new[] { new { latitude = 12.8m, longitude = 77.2m, recordedDateUtc = DateTime.UtcNow, speedKmph = 48m } } });
 
-        var tracking = await customer.GetAsync($"/api/v1/trips/{tripId}/tracking");
+        var tracking = await customer.GetJsonAsync($"/api/v1/trips/{tripId}/tracking");
         Assert.NotNull(tracking["lastLocation"]);
 
-        var deliveryOtp = await driver.PostAsync($"/api/v1/trips/{tripId}/delivery/otp");
-        await driver.PostAsync($"/api/v1/trips/{tripId}/delivery/verify",
+        var deliveryOtp = await driver.PostJsonAsync($"/api/v1/trips/{tripId}/delivery/otp");
+        await driver.PostJsonAsync($"/api/v1/trips/{tripId}/delivery/verify",
             new { otp = deliveryOtp!["testOtp"]!.GetValue<string>(), receiverName = "Manjunath R", odometer = 10152 });
 
         using (var form = new MultipartFormDataContent())
@@ -102,7 +102,7 @@ public sealed class BookingLifecycleTests : IClassFixture<ApiFactory>
         }
 
         // ---- 5. finance invoices, customer pays through the sandbox gateway
-        var invoice = await finance.PostAsync("/api/v1/invoices", new { bookingId });
+        var invoice = await finance.PostJsonAsync("/api/v1/invoices", new { bookingId });
         var invoiceId = invoice.Id();
 
         var payRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/payments")
@@ -113,33 +113,33 @@ public sealed class BookingLifecycleTests : IClassFixture<ApiFactory>
         var payResponse = await customer.SendAsync(payRequest);
         await Api.EnsureAsync(payResponse);
         var payment = await System.Net.Http.Json.HttpContentJsonExtensions.ReadFromJsonAsync<JsonObject>(payResponse.Content, Api.Json);
-        var paid = await customer.PostAsync($"/api/v1/payments/{payment.Id("paymentId")}/sandbox/complete");
+        var paid = await customer.PostJsonAsync($"/api/v1/payments/{payment.Id("paymentId")}/sandbox/complete");
         Assert.Equal(4, paid!["paymentStatusId"]!.GetValue<int>()); // Paid
 
-        var paidInvoice = await customer.GetAsync($"/api/v1/invoices/{invoiceId}");
+        var paidInvoice = await customer.GetJsonAsync($"/api/v1/invoices/{invoiceId}");
         Assert.Equal(4, paidInvoice["invoice"]!["invoiceStatusId"]!.GetValue<int>());
 
         // ---- 6. owner adds a payout account; finance settles with maker-checker approval
-        var me = await owner.GetAsync("/api/v1/owners/me");
+        var me = await owner.GetJsonAsync("/api/v1/owners/me");
         var ownerId = me["owner"]!["ownerId"]!.GetValue<long>();
-        await owner.PostAsync($"/api/v1/owners/{ownerId}/bank-accounts",
+        await owner.PostJsonAsync($"/api/v1/owners/{ownerId}/bank-accounts",
             new { accountHolderName = "Olekar Transport", bankName = "State Bank of India", accountNumber = "123456789012", ifscCode = "SBIN0001234", isPrimary = true });
 
-        var settlement = await finance.PostAsync("/api/v1/settlements", new { tripId });
+        var settlement = await finance.PostJsonAsync("/api/v1/settlements", new { tripId });
         var settlementId = settlement.Id();
 
         // Maker-checker: the creator cannot approve their own settlement.
         var selfApproval = await System.Net.Http.Json.HttpClientJsonExtensions.PostAsJsonAsync(finance, $"/api/v1/settlements/{settlementId}/approve", new { });
         Assert.Equal(System.Net.HttpStatusCode.UnprocessableEntity, selfApproval.StatusCode);
 
-        await admin.PostAsync($"/api/v1/settlements/{settlementId}/approve");
-        await finance.PostAsync($"/api/v1/settlements/{settlementId}/process");
-        await finance.PostAsync($"/api/v1/settlements/{settlementId}/complete", new { transactionReference = "UTR" + DateTime.UtcNow.Ticks });
+        await admin.PostJsonAsync($"/api/v1/settlements/{settlementId}/approve");
+        await finance.PostJsonAsync($"/api/v1/settlements/{settlementId}/process");
+        await finance.PostJsonAsync($"/api/v1/settlements/{settlementId}/complete", new { transactionReference = "UTR" + DateTime.UtcNow.Ticks });
 
-        var closed = await customer.GetAsync($"/api/v1/bookings/{bookingId}");
+        var closed = await customer.GetJsonAsync($"/api/v1/bookings/{bookingId}");
         Assert.Equal(11, closed["booking"]!["bookingStatusId"]!.GetValue<int>()); // Closed
 
-        var earnings = await owner.GetAsync("/api/v1/settlements/summary");
+        var earnings = await owner.GetJsonAsync("/api/v1/settlements/summary");
         Assert.True(earnings["totalEarned"]!.GetValue<decimal>() > 0);
     }
 }

@@ -56,21 +56,21 @@ public static class Api
         return client;
     }
 
-    public static async Task<JsonObject> GetAsync(this HttpClient client, string url)
+    public static async Task<JsonObject> GetJsonAsync(this HttpClient client, string url)
     {
         var response = await client.GetAsync(url);
         await EnsureAsync(response);
         return (await response.Content.ReadFromJsonAsync<JsonObject>(Json))!;
     }
 
-    public static async Task<JsonArray> GetArrayAsync(this HttpClient client, string url)
+    public static async Task<JsonArray> GetJsonArrayAsync(this HttpClient client, string url)
     {
         var response = await client.GetAsync(url);
         await EnsureAsync(response);
         return (await response.Content.ReadFromJsonAsync<JsonArray>(Json))!;
     }
 
-    public static async Task<JsonObject?> PostAsync(this HttpClient client, string url, object? body = null)
+    public static async Task<JsonObject?> PostJsonAsync(this HttpClient client, string url, object? body = null)
     {
         var response = await client.PostAsJsonAsync(url, body ?? new { }, Json);
         await EnsureAsync(response);
