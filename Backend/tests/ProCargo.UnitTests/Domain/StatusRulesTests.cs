@@ -62,7 +62,7 @@ public sealed class IndianFormatsTests
 
     [Theory]
     [InlineData("KA 25 AB 1234", true)]
-    [InlineData("ka-01-c-9", true)]
+    [InlineData("ka-01-c-1234", true)]
     [InlineData("22BH1234AA", true)]
     [InlineData("1234", false)]
     public void Validates_vehicle_registration_numbers(string number, bool valid)
