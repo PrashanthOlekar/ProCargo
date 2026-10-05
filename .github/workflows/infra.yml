@@ -1,0 +1,31 @@
+name: ProCargo.Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - ".github/workflows/infra.yml"
+  pull_request:
+    paths:
+      - "infra/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Build and lint Bicep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Bicep
+        run: az bicep install
+      - name: Build template
+        run: .github/scripts/run-and-annotate.sh "Bicep build" az bicep build --file infra/main.bicep --outfile "$RUNNER_TEMP/main.json"
+      - name: Build parameter files
+        run: |
+          for p in infra/*.bicepparam; do
+            .github/scripts/run-and-annotate.sh "Bicep params $p" az bicep build-params --file "$p" --outfile "$RUNNER_TEMP/$(basename "$p").json" || exit 1
+          done
