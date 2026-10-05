@@ -58,3 +58,48 @@ jobs:
               docker exec mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -d ProCargo -b -I \
                 -i "/db/ProCargo.Database/tests/$name" || exit 1
           done
+
+  ssms-scripts:
+    name: Single-file SSMS scripts are current and install cleanly
+    runs-on: ubuntu-latest
+    env:
+      SA_PASSWORD: ${{ secrets.CI_SQL_SA_PASSWORD || 'CiOnly!Passw0rd#2026' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: SSMS scripts match the numbered folders
+        run: |
+          bash Database/ProCargo.Database/build-ssms-scripts.sh
+          if ! git diff --exit-code -- Database/ProCargo.Database/SSMS; then
+            echo "::error title=SSMS scripts out of date::Run Database/ProCargo.Database/build-ssms-scripts.sh and commit the result."
+            exit 1
+          fi
+
+      - name: Start SQL Server
+        run: |
+          docker run -d --name mssql \
+            -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD="$SA_PASSWORD" -e MSSQL_PID=Developer \
+            -p 1433:1433 -v "$GITHUB_WORKSPACE/Database:/db:ro" \
+            mcr.microsoft.com/mssql/server:2022-latest
+          for i in $(seq 1 60); do
+            if docker exec mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -Q "SELECT 1" > /dev/null 2>&1; then exit 0; fi
+            sleep 2
+          done
+          docker logs mssql; exit 1
+
+      # No -I here: the script must set QUOTED_IDENTIFIER itself, exactly as it would run in SSMS.
+      - name: Run ProCargo_Install.sql twice and ProCargo_TestData.sql
+        run: |
+          run() { .github/scripts/run-and-annotate.sh "SSMS script $1" docker exec mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -b -d master -i "/db/ProCargo.Database/SSMS/$1" || exit 1; }
+          run ProCargo_Install.sql
+          run ProCargo_Install.sql
+          run ProCargo_TestData.sql
+
+      - name: Workflow smoke tests on the SSMS-installed database
+        run: |
+          for f in Database/ProCargo.Database/tests/*.sql; do
+            name="$(basename "$f")"
+            .github/scripts/run-and-annotate.sh "Smoke test $name" \
+              docker exec mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -C -d ProCargo -b -I \
+                -i "/db/ProCargo.Database/tests/$name" || exit 1
+          done
